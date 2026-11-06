@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Patient - Smart Hospital{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card-clean border-danger">
+      <div class="card-header bg-danger text-white fw-bold">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> Confirm Patient Deletion
+      </div>
+      <div class="card-body p-4 text-center">
+        <i class="bi bi-person-x text-danger display-4 mb-3 d-block"></i>
+        <h5 class="fw-bold mb-2">Delete Patient "{{ patient.name }}"?</h5>
+        <p class="text-muted small">
+          Patient ID: <strong>{{ patient.patient_id }}</strong><br>
+          Are you sure you want to delete this patient? All associated records (OPD tokens, admissions) may be affected.
+        </p>
+
+        <form method="post" class="mt-4 d-flex justify-content-center gap-3">
+          {% csrf_token %}
+          <a href="{% url 'patient_list' %}" class="btn btn-light border px-4">Cancel</a>
+          <button type="submit" class="btn btn-danger px-4">
+            <i class="bi bi-trash me-1"></i> Yes, Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Register OPD Patient - Smart Hospital{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card-clean">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="bi bi-clock-history me-2 text-primary"></i>Register Patient for OPD</span>
+        <a href="{% url 'opd_queue' %}" class="btn btn-sm btn-outline-secondary">Back to Queue</a>
+      </div>
+      <div class="card-body p-4">
+        <div class="alert alert-info py-2 small d-flex align-items-center gap-2 mb-3">
+          <i class="bi bi-info-circle-fill fs-5"></i>
+          <span>The next available token number for the selected department will be generated automatically.</span>
+        </div>
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label fw-semibold small text-secondary mb-0">Select Patient *</label>
+              <a href="{% url 'patient_add' %}" class="small text-primary text-decoration-none">
+                <i class="bi bi-person-plus"></i> New Patient?
+              </a>
+            </div>
+            {{ form.patient }}
+            {% if form.patient.errors %}
+              <div class="text-danger small mt-1">{{ form.patient.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-secondary">Department *</label>
+            {{ form.department }}
+            {% if form.department.errors %}
+              <div class="text-danger small mt-1">{{ form.department.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-secondary">Consulting Doctor (Optional)</label>
+            {{ form.doctor_name }}
+            {% if form.doctor_name.errors %}
+              <div class="text-danger small mt-1">{{ form.doctor_name.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-secondary">Chief Complaints / Notes</label>
+            {{ form.notes }}
+            {% if form.notes.errors %}
+              <div class="text-danger small mt-1">{{ form.notes.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+            <a href="{% url 'opd_queue' %}" class="btn btn-light border px-4">Cancel</a>
+            <button type="submit" class="btn btn-navy px-4">
+              <i class="bi bi-ticket-perforated me-1"></i> Generate Token
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Patients - Smart Hospital{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold text-dark mb-0">Patient Directory</h3>
+    <p class="text-muted small mb-0">Manage hospital patient records and registration</p>
+  </div>
+  <a href="{% url 'patient_add' %}" class="btn btn-navy btn-sm">
+    <i class="bi bi-person-plus me-1"></i> Register New Patient
+  </a>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="card-clean p-3 mb-3">
+  <form method="get" class="row g-2 align-items-center">
+    <div class="col-md-5">
+      <div class="input-group input-group-sm">
+        <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+        <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search by name, patient ID, or phone...">
+      </div>
+    </div>
+    <div class="col-md-3">
+      <select name="gender" class="form-select form-select-sm">
+        <option value="">All Genders</option>
+        <option value="Male" {% if gender == 'Male' %}selected{% endif %}>Male</option>
+        <option value="Female" {% if gender == 'Female' %}selected{% endif %}>Female</option>
+        <option value="Other" {% if gender == 'Other' %}selected{% endif %}>Other</option>
+      </select>
+    </div>
+    <div class="col-md-4 d-flex gap-2">
+      <button type="submit" class="btn btn-sm btn-navy px-3">Filter</button>
+      {% if query or gender %}
+        <a href="{% url 'patient_list' %}" class="btn btn-sm btn-outline-secondary">Reset</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<!-- Patients Table -->
+<div class="card-clean">
+  <div class="table-responsive">
+    <table class="table table-clean table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Patient ID</th>
+          <th>Name</th>
+          <th>Age / Gender</th>
+          <th>Phone</th>
+          <th>Registered</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for patient in patients %}
+          <tr>
+            <td>
+              <span class="badge bg-light text-primary border fw-bold">{{ patient.patient_id }}</span>
+            </td>
+            <td>
+              <a href="{% url 'patient_detail' patient.pk %}" class="fw-semibold text-dark text-decoration-none">
+                {{ patient.name }}
+              </a>
+              <div class="small text-muted text-truncate" style="max-width: 200px;">{{ patient.address }}</div>
+            </td>
+            <td>
+              {{ patient.age }} yrs / {{ patient.gender }}
+            </td>
+            <td>{{ patient.phone }}</td>
+            <td class="small text-muted">{{ patient.registration_date|date:"M d, Y" }}</td>
+            <td class="text-end">
+              <div class="btn-group btn-group-sm">
+                <a href="{% url 'patient_detail' patient.pk %}" class="btn btn-outline-secondary" title="View Details">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <a href="{% url 'opd_register' %}?patient={{ patient.pk }}" class="btn btn-outline-primary" title="Register OPD">
+                  <i class="bi bi-calendar-plus"></i> OPD
+                </a>
+                <a href="{% url 'admission_create' %}?patient={{ patient.pk }}" class="btn btn-outline-danger" title="Admit">
+                  <i class="bi bi-hospital"></i> Admit
+                </a>
+                <a href="{% url 'patient_edit' patient.pk %}" class="btn btn-outline-secondary" title="Edit">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <a href="{% url 'patient_delete' patient.pk %}" class="btn btn-outline-danger" title="Delete">
+                  <i class="bi bi-trash"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6" class="text-center py-4 text-muted">
+              No patients found matching the criteria.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+

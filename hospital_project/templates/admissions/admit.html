@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Admit Patient - Smart Hospital{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card-clean">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="bi bi-box-arrow-in-right me-2 text-danger"></i>Admit Patient to Hospital Bed</span>
+        <a href="{% url 'admission_list' %}" class="btn btn-sm btn-outline-secondary">Back to Admissions</a>
+      </div>
+      <div class="card-body p-4">
+        <div class="alert alert-info py-2 small d-flex align-items-center gap-2 mb-3">
+          <i class="bi bi-info-circle-fill fs-5"></i>
+          <span>Only currently <strong>Available</strong> beds are selectable. Occupied beds cannot be double-booked.</span>
+        </div>
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label fw-semibold small text-secondary mb-0">Select Patient *</label>
+              <a href="{% url 'patient_add' %}" class="small text-primary text-decoration-none">
+                <i class="bi bi-person-plus"></i> New Patient?
+              </a>
+            </div>
+            {{ form.patient }}
+            {% if form.patient.errors %}
+              <div class="text-danger small mt-1">{{ form.patient.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-secondary">Assign Available Bed *</label>
+            {{ form.bed }}
+            {% if form.bed.errors %}
+              <div class="text-danger small mt-1">{{ form.bed.errors.0 }}</div>
+            {% endif %}
+            <div class="form-text small">
+              Need to add more beds? <a href="{% url 'bed_add' %}">Click here to register a new bed</a>.
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-secondary">Reason for Admission / Diagnosis *</label>
+            {{ form.reason }}
+            {% if form.reason.errors %}
+              <div class="text-danger small mt-1">{{ form.reason.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+            <a href="{% url 'admission_list' %}" class="btn btn-light border px-4">Cancel</a>
+            <button type="submit" class="btn btn-navy px-4">
+              <i class="bi bi-check2-circle me-1"></i> Confirm Admission
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

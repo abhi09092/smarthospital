@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Dispense Medicine - Smart Hospital{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+    <div class="card-clean">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="bi bi-cart-check me-2 text-primary"></i>Dispense Medicine to Patient</span>
+        <a href="{% url 'medicine_list' %}" class="btn btn-sm btn-outline-secondary">Back to Inventory</a>
+      </div>
+      <div class="card-body p-4">
+        <div class="alert alert-info py-2 small d-flex align-items-center gap-2 mb-3">
+          <i class="bi bi-info-circle-fill fs-5"></i>
+          <span>Dispensing immediately deducts the quantity from inventory stock. You cannot dispense more than the available stock.</span>
+        </div>
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-secondary">Select Medicine *</label>
+            {{ form.medicine }}
+            {% if form.medicine.errors %}
+              <div class="text-danger small mt-1">{{ form.medicine.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-secondary">Patient (Optional)</label>
+            {{ form.patient }}
+            <div class="form-text small">Select patient if dispensing against a doctor prescription</div>
+            {% if form.patient.errors %}
+              <div class="text-danger small mt-1">{{ form.patient.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-secondary">Quantity to Dispense (Units) *</label>
+            {{ form.quantity }}
+            {% if form.quantity.errors %}
+              <div class="text-danger small mt-1 fw-bold">{{ form.quantity.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-secondary">Dosage / Usage Notes</label>
+            {{ form.notes }}
+            {% if form.notes.errors %}
+              <div class="text-danger small mt-1">{{ form.notes.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+            <a href="{% url 'medicine_list' %}" class="btn btn-light border px-4">Cancel</a>
+            <button type="submit" class="btn btn-navy px-4">
+              <i class="bi bi-check2-circle me-1"></i> Confirm & Dispense
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Medicine Stock Reference Sidebar -->
+  <div class="col-lg-5">
+    <div class="card-clean">
+      <div class="card-header">
+        <i class="bi bi-info-circle me-2 text-info"></i>Available Stock Reference
+      </div>
+      <div class="table-responsive" style="max-height: 460px; overflow-y: auto;">
+        <table class="table table-clean table-sm align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Medicine</th>
+              <th>Available</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for med in medicines %}
+              <tr>
+                <td>
+                  <strong>{{ med.name }}</strong>
+                  <div class="small text-muted">{{ med.category }}</div>
+                </td>
+                <td>
+                  <span class="fw-bold">{{ med.quantity }}</span> units
+                </td>
+                <td>
+                  {% if med.is_low_stock %}
+                    <span class="badge badge-warning-custom">Low Stock</span>
+                  {% else %}
+                    <span class="badge badge-available">In Stock</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="3" class="text-center py-3 text-muted">No medicines in stock.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

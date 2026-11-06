@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+
+{% block title %}OPD Queue - Smart Hospital{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold text-dark mb-0">OPD Queue Management</h3>
+    <p class="text-muted small mb-0">Daily patient queue for today ({{ today|date:"M d, Y" }})</p>
+  </div>
+  <a href="{% url 'opd_register' %}" class="btn btn-navy btn-sm">
+    <i class="bi bi-plus-circle me-1"></i> Register OPD Patient
+  </a>
+</div>
+
+<!-- Queue KPI Cards -->
+<div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <div class="stat-card border-warning">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="stat-label text-warning">Waiting Patients</div>
+          <div class="stat-value text-warning">{{ waiting_count }}</div>
+        </div>
+        <div class="stat-icon bg-warning-subtle text-warning">
+          <i class="bi bi-hourglass-split"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card border-info">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="stat-label text-info">In Progress (With Doctor)</div>
+          <div class="stat-value text-info">{{ in_progress_count }}</div>
+        </div>
+        <div class="stat-icon bg-info-subtle text-info">
+          <i class="bi bi-person-gear"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card border-success">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="stat-label text-success">Consultation Completed</div>
+          <div class="stat-value text-success">{{ completed_count }}</div>
+        </div>
+        <div class="stat-icon bg-success-subtle text-success">
+          <i class="bi bi-check2-all"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="card-clean p-3 mb-3">
+  <form method="get" class="row g-2 align-items-center">
+    <div class="col-md-4">
+      <label class="form-label small text-muted mb-1">Filter by Department</label>
+      <select name="department" class="form-select form-select-sm">
+        <option value="">All Departments</option>
+        {% for dept in departments %}
+          <option value="{{ dept.pk }}" {% if selected_dept == dept.pk|stringformat:"s" %}selected{% endif %}>
+            {{ dept.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label small text-muted mb-1">Filter by Status</label>
+      <select name="status" class="form-select form-select-sm">
+        <option value="">All Statuses</option>
+        <option value="Waiting" {% if selected_status == 'Waiting' %}selected{% endif %}>Waiting</option>
+        <option value="In Progress" {% if selected_status == 'In Progress' %}selected{% endif %}>In Progress</option>
+        <option value="Completed" {% if selected_status == 'Completed' %}selected{% endif %}>Completed</option>
+        <option value="Cancelled" {% if selected_status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+      </select>
+    </div>
+    <div class="col-md-4 d-flex align-items-end gap-2">
+      <button type="submit" class="btn btn-sm btn-navy px-3">Filter Queue</button>
+      {% if selected_dept or selected_status %}
+        <a href="{% url 'opd_queue' %}" class="btn btn-sm btn-outline-secondary">Reset</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<!-- Queue Table -->
+<div class="card-clean">
+  <div class="table-responsive">
+    <table class="table table-clean table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Token #</th>
+          <th>Patient Name</th>
+          <th>Department</th>
+          <th>Assigned Doctor</th>
+          <th>Registration Time</th>
+          <th>Status</th>
+          <th class="text-end">Update Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for token in tokens %}
+          <tr {% if token.status == 'In Progress' %}class="table-info-subtle"{% endif %}>
+            <td>
+              <span class="fs-6 fw-bold text-dark px-2 py-1 rounded bg-light border">
+                #{{ token.token_number }}
+              </span>
+            </td>
+            <td>
+              <a href="{% url 'patient_detail' token.patient.pk %}" class="fw-semibold text-dark text-decoration-none">
+                {{ token.patient.name }}
+              </a>
+              <div class="small text-muted">{{ token.patient.patient_id }} &bull; {{ token.patient.gender }}, {{ token.patient.age }}y</div>
+            </td>
+            <td>
+              <span class="badge bg-secondary-subtle text-secondary border">{{ token.department.name }}</span>
+            </td>
+            <td>{{ token.doctor_name|default:"General Duty Doctor" }}</td>
+            <td class="small text-muted">{{ token.registration_time|date:"h:i A" }}</td>
+            <td>
+              {% if token.status == 'Waiting' %}
+                <span class="badge badge-waiting"><i class="bi bi-clock me-1"></i>Waiting</span>
+              {% elif token.status == 'In Progress' %}
+                <span class="badge badge-inprogress"><i class="bi bi-arrow-repeat me-1"></i>In Progress</span>
+              {% elif token.status == 'Completed' %}
+                <span class="badge badge-completed"><i class="bi bi-check-circle me-1"></i>Completed</span>
+              {% else %}
+                <span class="badge badge-cancelled">Cancelled</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <div class="btn-group btn-group-sm">
+                <!-- If waiting, start -->
+                {% if token.status == 'Waiting' %}
+                  <form method="post" action="{% url 'opd_update_status' token.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="status" value="In Progress">
+                    <button type="submit" class="btn btn-outline-primary" title="Call Patient in">
+                      <i class="bi bi-play-circle me-1"></i> Call In
+                    </button>
+                  </form>
+                {% endif %}
+
+                <!-- If in progress, complete -->
+                {% if token.status == 'In Progress' %}
+                  <form method="post" action="{% url 'opd_update_status' token.pk %}" class="d-inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="status" value="Completed">
+                    <button type="submit" class="btn btn-success" title="Mark Done">
+                      <i class="bi bi-check2-circle me-1"></i> Done
+                    </button>
+                  </form>
+                {% endif %}
+
+                <!-- Status Change Dropdown -->
+                <div class="btn-group">
+                  <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                    Change
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                    <li>
+                      <form method="post" action="{% url 'opd_update_status' token.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="Waiting">
+                        <button type="submit" class="dropdown-item small">Set Waiting</button>
+                      </form>
+                    </li>
+                    <li>
+                      <form method="post" action="{% url 'opd_update_status' token.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="In Progress">
+                        <button type="submit" class="dropdown-item small">Set In Progress</button>
+                      </form>
+                    </li>
+                    <li>
+                      <form method="post" action="{% url 'opd_update_status' token.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="Completed">
+                        <button type="submit" class="dropdown-item small text-success">Mark Completed</button>
+                      </form>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                      <form method="post" action="{% url 'opd_update_status' token.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="Cancelled">
+                        <button type="submit" class="dropdown-item small text-danger">Cancel Token</button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="7" class="text-center py-4 text-muted">
+              No OPD tokens found for today.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+

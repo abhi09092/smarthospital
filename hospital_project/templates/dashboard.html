@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Smart Hospital{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold text-dark mb-0">Hospital Overview</h3>
+    <p class="text-muted small mb-0">Real-time status for today ({{ today|date:"M d, Y" }})</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'opd_register' %}" class="btn btn-sm btn-navy">
+      <i class="bi bi-plus-circle me-1"></i> New OPD Token
+    </a>
+    <a href="{% url 'patient_add' %}" class="btn btn-sm btn-outline-navy">
+      <i class="bi bi-person-plus me-1"></i> Register Patient
+    </a>
+  </div>
+</div>
+
+<!-- Summary Cards (6 KPIs) -->
+<div class="row g-3 mb-4">
+  <!-- Total Patients -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="stat-label">Total Patients</div>
+          <div class="stat-value">{{ total_patients }}</div>
+        </div>
+        <div class="stat-icon bg-primary-subtle text-primary">
+          <i class="bi bi-people"></i>
+        </div>
+      </div>
+      <a href="{% url 'patient_list' %}" class="small text-decoration-none text-muted d-block mt-2">
+        View patients <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Today's OPD -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="stat-label">Today's OPD</div>
+          <div class="stat-value">{{ today_opd_count }}</div>
+        </div>
+        <div class="stat-icon bg-info-subtle text-info">
+          <i class="bi bi-calendar-check"></i>
+        </div>
+      </div>
+      <a href="{% url 'opd_queue' %}" class="small text-decoration-none text-muted d-block mt-2">
+        Manage queue <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Available Beds -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="stat-label">Available Beds</div>
+          <div class="stat-value text-success">{{ available_beds }}</div>
+        </div>
+        <div class="stat-icon bg-success-subtle text-success">
+          <i class="bi bi-check2-circle"></i>
+        </div>
+      </div>
+      <a href="{% url 'bed_list' %}?status=Available" class="small text-decoration-none text-muted d-block mt-2">
+        View available <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Occupied Beds -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="stat-label">Occupied Beds</div>
+          <div class="stat-value text-danger">{{ occupied_beds }}</div>
+        </div>
+        <div class="stat-icon bg-danger-subtle text-danger">
+          <i class="bi bi-x-circle"></i>
+        </div>
+      </div>
+      <a href="{% url 'admission_list' %}?status=Admitted" class="small text-decoration-none text-muted d-block mt-2">
+        View admissions <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Total Medicines -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="stat-label">Total Medicines</div>
+          <div class="stat-value">{{ total_medicines }}</div>
+        </div>
+        <div class="stat-icon bg-secondary-subtle text-secondary">
+          <i class="bi bi-capsule"></i>
+        </div>
+      </div>
+      <a href="{% url 'medicine_list' %}" class="small text-decoration-none text-muted d-block mt-2">
+        Check inventory <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Low Stock Medicines -->
+  <div class="col-xl-2 col-md-4 col-sm-6">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <div class="stat-label">Low Stock</div>
+          <div class="stat-value text-warning">{{ low_stock_count }}</div>
+        </div>
+        <div class="stat-icon bg-warning-subtle text-warning">
+          <i class="bi bi-exclamation-triangle"></i>
+        </div>
+      </div>
+      <a href="{% url 'medicine_list' %}?low_stock=1" class="small text-decoration-none text-muted d-block mt-2">
+        Low stock items <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Today's OPD Live Queue -->
+  <div class="col-lg-7">
+    <div class="card-clean">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clock-history me-2 text-primary"></i>Today's OPD Queue</span>
+        <a href="{% url 'opd_queue' %}" class="btn btn-sm btn-link text-decoration-none p-0">Full Queue &rarr;</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-clean table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Patient</th>
+              <th>Department</th>
+              <th>Doctor</th>
+              <th>Status</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for token in today_tokens %}
+              <tr>
+                <td><span class="badge bg-light text-dark border fw-bold">#{{ token.token_number }}</span></td>
+                <td>
+                  <a href="{% url 'patient_detail' token.patient.pk %}" class="fw-semibold text-decoration-none text-dark">
+                    {{ token.patient.name }}
+                  </a>
+                  <div class="small text-muted">{{ token.patient.patient_id }}</div>
+                </td>
+                <td>{{ token.department.name }}</td>
+                <td>{{ token.doctor_name|default:"General OPD" }}</td>
+                <td>
+                  {% if token.status == 'Waiting' %}
+                    <span class="badge badge-waiting">Waiting</span>
+                  {% elif token.status == 'In Progress' %}
+                    <span class="badge badge-inprogress">In Progress</span>
+                  {% elif token.status == 'Completed' %}
+                    <span class="badge badge-completed">Completed</span>
+                  {% else %}
+                    <span class="badge badge-cancelled">Cancelled</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  {% if token.status == 'Waiting' %}
+                    <form method="post" action="{% url 'opd_update_status' token.pk %}" class="d-inline">
+                      {% csrf_token %}
+                      <input type="hidden" name="status" value="In Progress">
+                      <button type="submit" class="btn btn-sm btn-outline-primary py-0 px-2" title="Call Patient">Start</button>
+                    </form>
+                  {% elif token.status == 'In Progress' %}
+                    <form method="post" action="{% url 'opd_update_status' token.pk %}" class="d-inline">
+                      {% csrf_token %}
+                      <input type="hidden" name="status" value="Completed">
+                      <button type="submit" class="btn btn-sm btn-success py-0 px-2" title="Mark Done">Complete</button>
+                    </form>
+                  {% else %}
+                    <span class="text-muted small">&bull;</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="6" class="text-center py-4 text-muted">
+                  No OPD tokens registered for today yet.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Column: Admitted Patients & Low Stock Alert -->
+  <div class="col-lg-5">
+    <!-- Active Bed Admissions -->
+    <div class="card-clean mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-hospital me-2 text-danger"></i>Currently Admitted Patients</span>
+        <a href="{% url 'admission_list' %}" class="btn btn-sm btn-link text-decoration-none p-0">View All &rarr;</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-clean align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Patient</th>
+              <th>Bed</th>
+              <th>Admitted</th>
+              <th class="text-end">Discharge</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for adm in active_admissions %}
+              <tr>
+                <td>
+                  <a href="{% url 'patient_detail' adm.patient.pk %}" class="fw-semibold text-decoration-none text-dark">
+                    {{ adm.patient.name }}
+                  </a>
+                </td>
+                <td>
+                  <span class="badge badge-occupied">{{ adm.bed.bed_number }}</span>
+                  <div class="small text-muted">{{ adm.bed.category }}</div>
+                </td>
+                <td class="small">{{ adm.admission_date|date:"M d, H:i" }}</td>
+                <td class="text-end">
+                  <form method="post" action="{% url 'admission_discharge' adm.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" onclick="return confirm('Discharge {{ adm.patient.name }} and release bed {{ adm.bed.bed_number }}?');">
+                      Discharge
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" class="text-center py-3 text-muted">No admitted patients currently.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Low Stock Inventory Alerts -->
+    <div class="card-clean">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Low Stock Warnings</span>
+        <a href="{% url 'medicine_list' %}?low_stock=1" class="btn btn-sm btn-link text-decoration-none p-0">View All &rarr;</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-clean align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Medicine</th>
+              <th>Available</th>
+              <th>Threshold</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for med in low_stock_items %}
+              <tr>
+                <td>
+                  <span class="fw-semibold">{{ med.name }}</span>
+                  <div class="small text-muted">{{ med.category }}</div>
+                </td>
+                <td><span class="badge badge-warning-custom">{{ med.quantity }} left</span></td>
+                <td class="small text-muted">{{ med.minimum_stock }}</td>
+                <td class="text-end">
+                  <a href="{% url 'medicine_edit' med.pk %}" class="btn btn-sm btn-outline-secondary py-0 px-2">Update</a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" class="text-center py-3 text-success small">
+                  <i class="bi bi-check-circle me-1"></i> All medicines are above minimum stock levels.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

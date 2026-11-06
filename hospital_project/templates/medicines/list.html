@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}Medicine Inventory - Smart Hospital{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold text-dark mb-0">Pharmacy & Medicine Inventory</h3>
+    <p class="text-muted small mb-0">Track drug inventory, expiry dates, and low stock thresholds</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'medicine_dispense' %}" class="btn btn-navy btn-sm">
+      <i class="bi bi-cart-check me-1"></i> Dispense Medicine
+    </a>
+    <a href="{% url 'medicine_add' %}" class="btn btn-outline-navy btn-sm">
+      <i class="bi bi-plus-circle me-1"></i> Add Medicine
+    </a>
+  </div>
+</div>
+
+<!-- Stock KPI Cards -->
+<div class="row g-3 mb-3">
+  <div class="col-md-6">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="stat-label">Total Medicines in Catalog</div>
+          <div class="stat-value">{{ total_count }}</div>
+        </div>
+        <div class="stat-icon bg-secondary-subtle text-secondary">
+          <i class="bi bi-capsule"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="stat-card border-warning">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="stat-label text-warning">Low Stock Alerts</div>
+          <div class="stat-value text-warning">{{ low_stock_count }}</div>
+        </div>
+        <div class="stat-icon bg-warning-subtle text-warning">
+          <i class="bi bi-exclamation-triangle"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Search & Filter Bar -->
+<div class="card-clean p-3 mb-3">
+  <form method="get" class="row g-2 align-items-center">
+    <div class="col-md-6">
+      <div class="input-group input-group-sm">
+        <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+        <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search medicine name or category (e.g., Paracetamol, Syrup)...">
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="form-check pt-1">
+        <input class="form-check-input" type="checkbox" name="low_stock" value="1" id="lowStockCheck" {% if filter_low_stock == '1' %}checked{% endif %}>
+        <label class="form-check-label small fw-semibold text-warning" for="lowStockCheck">
+          Show Low Stock Warnings Only
+        </label>
+      </div>
+    </div>
+    <div class="col-md-3 d-flex gap-2 justify-content-end">
+      <button type="submit" class="btn btn-sm btn-navy px-3">Filter</button>
+      {% if query or filter_low_stock %}
+        <a href="{% url 'medicine_list' %}" class="btn btn-sm btn-outline-secondary">Reset</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<!-- Medicine Table -->
+<div class="card-clean">
+  <div class="table-responsive">
+    <table class="table table-clean table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Medicine Name</th>
+          <th>Category</th>
+          <th>Current Stock</th>
+          <th>Unit Price</th>
+          <th>Expiry Date</th>
+          <th>Stock Status</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for med in medicines %}
+          <tr {% if med.is_low_stock %}class="table-warning-subtle"{% endif %}>
+            <td>
+              <strong>{{ med.name }}</strong>
+            </td>
+            <td><span class="badge bg-light text-dark border">{{ med.category }}</span></td>
+            <td>
+              <span class="fw-bold fs-6">{{ med.quantity }}</span> units
+              <div class="small text-muted">Min: {{ med.minimum_stock }}</div>
+            </td>
+            <td>₹{{ med.price }}</td>
+            <td class="small">{{ med.expiry_date|date:"M d, Y" }}</td>
+            <td>
+              {% if med.is_low_stock %}
+                <span class="badge badge-warning-custom">
+                  <i class="bi bi-exclamation-triangle-fill me-1"></i>Low Stock
+                </span>
+              {% else %}
+                <span class="badge badge-available">
+                  <i class="bi bi-check-circle me-1"></i>Adequate
+                </span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <div class="btn-group btn-group-sm">
+                <a href="{% url 'medicine_dispense' %}?medicine={{ med.pk }}" class="btn btn-outline-primary" title="Dispense this medicine">
+                  <i class="bi bi-cart-plus"></i> Dispense
+                </a>
+                <a href="{% url 'medicine_edit' med.pk %}" class="btn btn-outline-secondary" title="Edit Medicine / Update Stock">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <a href="{% url 'medicine_delete' med.pk %}" class="btn btn-outline-danger" title="Delete Medicine">
+                  <i class="bi bi-trash"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="7" class="text-center py-4 text-muted">No medicines found in inventory.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+

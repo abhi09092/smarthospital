@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block title %}Bed Management - Smart Hospital{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold text-dark mb-0">Hospital Bed Availability</h3>
+    <p class="text-muted small mb-0">Real-time bed occupancy and ward status</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'admission_create' %}" class="btn btn-sm btn-navy">
+      <i class="bi bi-box-arrow-in-right me-1"></i> Admit Patient
+    </a>
+    <a href="{% url 'bed_add' %}" class="btn btn-sm btn-outline-navy">
+      <i class="bi bi-plus-circle me-1"></i> Add Bed
+    </a>
+  </div>
+</div>
+
+<!-- Bed Summary Cards -->
+<div class="row g-3 mb-3">
+  <div class="col-md-4">
+    <div class="stat-card">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="stat-label">Total Beds</div>
+          <div class="stat-value">{{ total_beds }}</div>
+        </div>
+        <div class="stat-icon bg-secondary-subtle text-secondary">
+          <i class="bi bi-hospital"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card border-success">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="stat-label text-success">Available Beds</div>
+          <div class="stat-value text-success">{{ available_count }}</div>
+        </div>
+        <div class="stat-icon bg-success-subtle text-success">
+          <i class="bi bi-check-circle"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="stat-card border-danger">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <div class="stat-label text-danger">Occupied Beds</div>
+          <div class="stat-value text-danger">{{ occupied_count }}</div>
+        </div>
+        <div class="stat-icon bg-danger-subtle text-danger">
+          <i class="bi bi-x-circle"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="card-clean p-3 mb-3">
+  <form method="get" class="row g-2 align-items-center">
+    <div class="col-md-4">
+      <label class="form-label small text-muted mb-1">Filter by Category</label>
+      <select name="category" class="form-select form-select-sm">
+        <option value="">All Categories</option>
+        {% for cat_val, cat_label in categories %}
+          <option value="{{ cat_val }}" {% if selected_category == cat_val %}selected{% endif %}>
+            {{ cat_label }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label small text-muted mb-1">Filter by Status</label>
+      <select name="status" class="form-select form-select-sm">
+        <option value="">All Statuses</option>
+        <option value="Available" {% if selected_status == 'Available' %}selected{% endif %}>Available Only (Green)</option>
+        <option value="Occupied" {% if selected_status == 'Occupied' %}selected{% endif %}>Occupied Only (Red)</option>
+      </select>
+    </div>
+    <div class="col-md-4 d-flex align-items-end gap-2">
+      <button type="submit" class="btn btn-sm btn-navy px-3">Filter Beds</button>
+      {% if selected_category or selected_status %}
+        <a href="{% url 'bed_list' %}" class="btn btn-sm btn-outline-secondary">Reset</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<!-- Visual Bed Grid -->
+<div class="card-clean p-3 mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="fw-bold small text-secondary text-uppercase letter-spacing">Visual Ward Layout</span>
+    <div class="d-flex gap-3 small">
+      <span class="d-flex align-items-center gap-1"><span class="badge badge-available px-2">&nbsp;</span> Available (Green)</span>
+      <span class="d-flex align-items-center gap-1"><span class="badge badge-occupied px-2">&nbsp;</span> Occupied (Red)</span>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    {% for bed in beds %}
+      <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+        <div class="bed-box {% if bed.status == 'Available' %}bed-available{% else %}bed-occupied{% endif %}">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="badge bg-white text-dark border fw-bold">{{ bed.category }}</span>
+            {% if bed.status == 'Available' %}
+              <span class="badge badge-available">Available</span>
+            {% else %}
+              <span class="badge badge-occupied">Occupied</span>
+            {% endif %}
+          </div>
+          <div class="fs-4 fw-bold text-dark my-1">{{ bed.bed_number }}</div>
+          <div class="small text-muted mb-2">₹{{ bed.daily_charge }}/day</div>
+
+          {% if bed.status == 'Available' %}
+            <a href="{% url 'admission_create' %}?bed={{ bed.pk }}" class="btn btn-sm btn-outline-success w-100 py-0">
+              Admit Patient
+            </a>
+          {% else %}
+            <span class="small text-danger fw-semibold d-block">Occupied</span>
+          {% endif %}
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12 text-center py-4 text-muted">
+        No beds configured in this category.
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Bed Table View -->
+<div class="card-clean">
+  <div class="card-header">
+    <i class="bi bi-table me-2 text-primary"></i>Bed Roster Details
+  </div>
+  <div class="table-responsive">
+    <table class="table table-clean table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Bed Number</th>
+          <th>Category</th>
+          <th>Daily Charge</th>
+          <th>Status</th>
+          <th>Notes / Location</th>
+          <th class="text-end">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for bed in beds %}
+          <tr>
+            <td><strong>{{ bed.bed_number }}</strong></td>
+            <td><span class="badge bg-light text-dark border">{{ bed.category }}</span></td>
+            <td>₹{{ bed.daily_charge }}</td>
+            <td>
+              {% if bed.status == 'Available' %}
+                <span class="badge badge-available"><i class="bi bi-check-circle me-1"></i>Available</span>
+              {% else %}
+                <span class="badge badge-occupied"><i class="bi bi-person-fill me-1"></i>Occupied</span>
+              {% endif %}
+            </td>
+            <td class="small text-muted">{{ bed.notes|default:"-" }}</td>
+            <td class="text-end">
+              {% if bed.status == 'Available' %}
+                <a href="{% url 'admission_create' %}?bed={{ bed.pk }}" class="btn btn-sm btn-outline-primary py-0 px-2">
+                  Admit
+                </a>
+              {% else %}
+                <a href="{% url 'admission_list' %}?status=Admitted" class="btn btn-sm btn-outline-secondary py-0 px-2">
+                  View Admission
+                </a>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6" class="text-center py-3 text-muted">No beds found.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+

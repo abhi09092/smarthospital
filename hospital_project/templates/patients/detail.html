@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}Patient Profile - {{ patient.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold text-dark mb-0">{{ patient.name }}</h3>
+    <span class="badge bg-primary fs-6">{{ patient.patient_id }}</span>
+    <span class="text-muted small ms-2">Registered on {{ patient.registration_date|date:"M d, Y" }}</span>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'opd_register' %}?patient={{ patient.pk }}" class="btn btn-sm btn-navy">
+      <i class="bi bi-clock-history me-1"></i> Issue OPD Token
+    </a>
+    <a href="{% url 'admission_create' %}?patient={{ patient.pk }}" class="btn btn-sm btn-outline-danger">
+      <i class="bi bi-hospital me-1"></i> Admit to Bed
+    </a>
+    <a href="{% url 'patient_edit' patient.pk %}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-pencil me-1"></i> Edit
+    </a>
+    <a href="{% url 'patient_list' %}" class="btn btn-sm btn-light border">
+      Back to List
+    </a>
+  </div>
+</div>
+
+<!-- Patient Info Card -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3 col-sm-6">
+    <div class="card-clean p-3">
+      <div class="text-muted small text-uppercase fw-semibold">Age / Gender</div>
+      <div class="fs-5 fw-bold text-dark">{{ patient.age }} yrs &bull; {{ patient.gender }}</div>
+    </div>
+  </div>
+  <div class="col-md-3 col-sm-6">
+    <div class="card-clean p-3">
+      <div class="text-muted small text-uppercase fw-semibold">Phone</div>
+      <div class="fs-5 fw-bold text-dark">{{ patient.phone }}</div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card-clean p-3">
+      <div class="text-muted small text-uppercase fw-semibold">Address</div>
+      <div class="fs-6 fw-medium text-dark">{{ patient.address }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- History Panels -->
+<div class="row g-4">
+  <!-- OPD History -->
+  <div class="col-12">
+    <div class="card-clean">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clock-history me-2 text-primary"></i>OPD Visit History ({{ opd_history.count }})</span>
+        <a href="{% url 'opd_register' %}?patient={{ patient.pk }}" class="btn btn-sm btn-outline-primary py-0 px-2">+ New Token</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-clean align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Token #</th>
+              <th>Department</th>
+              <th>Doctor</th>
+              <th>Status</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for token in opd_history %}
+              <tr>
+                <td>{{ token.date|date:"M d, Y" }}</td>
+                <td><span class="badge bg-light text-dark border">#{{ token.token_number }}</span></td>
+                <td>{{ token.department.name }}</td>
+                <td>{{ token.doctor_name|default:"General OPD" }}</td>
+                <td>
+                  {% if token.status == 'Waiting' %}
+                    <span class="badge badge-waiting">Waiting</span>
+                  {% elif token.status == 'In Progress' %}
+                    <span class="badge badge-inprogress">In Progress</span>
+                  {% elif token.status == 'Completed' %}
+                    <span class="badge badge-completed">Completed</span>
+                  {% else %}
+                    <span class="badge badge-cancelled">Cancelled</span>
+                  {% endif %}
+                </td>
+                <td class="small text-muted">{{ token.notes|default:"-" }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="6" class="text-center py-3 text-muted">No OPD visits recorded for this patient.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bed Admissions History -->
+  <div class="col-lg-6">
+    <div class="card-clean">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-hospital me-2 text-danger"></i>Hospital Admissions ({{ admissions_history.count }})</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-clean align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Bed</th>
+              <th>Admitted</th>
+              <th>Discharged</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for adm in admissions_history %}
+              <tr>
+                <td>
+                  <strong>{{ adm.bed.bed_number }}</strong>
+                  <div class="small text-muted">{{ adm.bed.category }}</div>
+                </td>
+                <td class="small">{{ adm.admission_date|date:"M d, Y H:i" }}</td>
+                <td class="small">
+                  {% if adm.discharge_date %}
+                    {{ adm.discharge_date|date:"M d, Y H:i" }}
+                  {% else %}
+                    <span class="text-danger fw-semibold">Still Admitted</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if adm.status == 'Admitted' %}
+                    <span class="badge badge-occupied">Admitted</span>
+                  {% else %}
+                    <span class="badge badge-available">Discharged</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" class="text-center py-3 text-muted">No admission records found.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dispensed Medicines History -->
+  <div class="col-lg-6">
+    <div class="card-clean">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-capsule me-2 text-info"></i>Dispensed Medications ({{ dispensed_history.count }})</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-clean align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Medicine</th>
+              <th>Qty</th>
+              <th>Date</th>
+              <th>Dispensed By</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in dispensed_history %}
+              <tr>
+                <td><strong>{{ item.medicine.name }}</strong></td>
+                <td><span class="badge bg-light text-dark border">{{ item.quantity }} units</span></td>
+                <td class="small text-muted">{{ item.dispensed_date|date:"M d, Y H:i" }}</td>
+                <td class="small">{{ item.dispensed_by.username|default:"Staff" }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" class="text-center py-3 text-muted">No medicines dispensed to this patient yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Smart Hospital{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card-clean">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-bold"><i class="bi bi-person-fill-gear me-2 text-primary"></i>{{ title }}</span>
+        <a href="{% url 'patient_list' %}" class="btn btn-sm btn-outline-secondary">Back to List</a>
+      </div>
+      <div class="card-body p-4">
+        <form method="post" novalidate>
+          {% csrf_token %}
+
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label fw-semibold small text-secondary">Full Name *</label>
+              {{ form.name }}
+              {% if form.name.errors %}
+                <div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold small text-secondary">Age (Years) *</label>
+              {{ form.age }}
+              {% if form.age.errors %}
+                <div class="text-danger small mt-1">{{ form.age.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label fw-semibold small text-secondary">Gender *</label>
+              {{ form.gender }}
+              {% if form.gender.errors %}
+                <div class="text-danger small mt-1">{{ form.gender.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-md-8">
+              <label class="form-label fw-semibold small text-secondary">Phone Number *</label>
+              {{ form.phone }}
+              {% if form.phone.errors %}
+                <div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-semibold small text-secondary">Address *</label>
+              {{ form.address }}
+              {% if form.address.errors %}
+                <div class="text-danger small mt-1">{{ form.address.errors.0 }}</div>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="mt-4 pt-3 border-top d-flex justify-content-end gap-2">
+            <a href="{% url 'patient_list' %}" class="btn btn-light border px-4">Cancel</a>
+            <button type="submit" class="btn btn-navy px-4">
+              <i class="bi bi-check2-circle me-1"></i> Save Patient
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

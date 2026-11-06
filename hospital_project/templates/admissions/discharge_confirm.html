@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirm Discharge - Smart Hospital{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card-clean border-warning">
+      <div class="card-header bg-warning text-dark fw-bold">
+        <i class="bi bi-box-arrow-right me-2"></i> Confirm Patient Discharge
+      </div>
+      <div class="card-body p-4 text-center">
+        <i class="bi bi-person-check text-primary display-4 mb-3 d-block"></i>
+        <h5 class="fw-bold mb-2">Discharge {{ admission.patient.name }}?</h5>
+        <p class="text-muted small">
+          Allocated Bed: <strong>{{ admission.bed.bed_number }}</strong> ({{ admission.bed.category }})<br>
+          Admitted On: <strong>{{ admission.admission_date|date:"M d, Y H:i" }}</strong><br>
+          Discharging will record today's discharge timestamp and immediately release <strong>Bed {{ admission.bed.bed_number }}</strong> back to <strong>Available</strong> status.
+        </p>
+
+        <form method="post" class="mt-4 d-flex justify-content-center gap-3">
+          {% csrf_token %}
+          <a href="{% url 'admission_list' %}" class="btn btn-light border px-4">Cancel</a>
+          <button type="submit" class="btn btn-navy px-4">
+            <i class="bi bi-check2-circle me-1"></i> Confirm & Release Bed
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
