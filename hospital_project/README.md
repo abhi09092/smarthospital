@@ -112,7 +112,7 @@ hospital_project/
    http://127.0.0.1:8000/
    ```
 
-4. Log in using `admin` / `admin123` or `staff` / `staff123`.
+4. Log in using `
 
 ---
 
